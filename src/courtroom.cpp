@@ -1966,6 +1966,13 @@ void Courtroom::on_chat_return_pressed()
   {
     return;
   }
+  for(int i = 0; i < chatmessage_queue.size(); ++i)
+  {
+      if (chatmessage_queue.at(i).at(CHAR_ID).toInt() == m_cid)
+      {
+        return;
+      }
+  }
 
   ui_ic_chat_message->blockSignals(true);
   QTimer::singleShot(Options::getInstance().chatRateLimit(), this, [this] { ui_ic_chat_message->blockSignals(false); });

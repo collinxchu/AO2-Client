@@ -173,7 +173,7 @@ void Options::setMaxLogSize(int value)
 
 int Options::textStayTime() const
 {
-  return config.value("stay_time", 200).toInt();
+  return 200;
 }
 
 void Options::setTextStayTime(int value)
@@ -193,7 +193,7 @@ void Options::setTextCrawlSpeed(int value)
 
 int Options::chatRateLimit() const
 {
-  return config.value("chat_ratelimit", 300).toInt();
+  return 300;
 }
 
 void Options::setChatRateLimit(int value)
