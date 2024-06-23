@@ -1,0 +1,6 @@
+<!DOCTYPE RCC><RCC version="1.0">
+<qresource prefix="/base/themes/AOHDUltraDark">
+    <file>lobby.ui</file>
+    <file>version</file>
+</qresource>
+</RCC>

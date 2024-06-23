@@ -1,0 +1,9 @@
+<RCC>
+  <qresource>
+    <file>test_borderimage_pressed.png</file>
+    <file>test_borderimage_hover.png</file>
+    <file>lobbyFiller.png</file>
+    <file>test_borderimage.png</file>
+    <file>list_background.png</file>
+  </qresource>
+</RCC>
