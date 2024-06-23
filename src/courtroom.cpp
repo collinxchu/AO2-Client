@@ -6241,19 +6241,11 @@ void Courtroom::set_text_color_dropdown()
 
 void Courtroom::gen_char_rgb_list(QString p_misc)
 {
-  if (Options::getInstance().customChatboxEnabled())
+  char_color_rgb_list.clear();
+  for (int c = 0; c < max_colors; ++c)
   {
-      char_color_rgb_list.clear();
-      for (int c = 0; c < max_colors; ++c)
-      {
-        QColor color = ao_app->get_chat_color("c" + QString::number(c), p_misc);
-        char_color_rgb_list.append(color);
-      }
-  }
-  else
-  {
-      char_color_rgb_list.clear();
-      char_color_rgb_list = default_color_rgb_list;
+    QColor color = ao_app->get_chat_color("c" + QString::number(c), p_misc);
+    char_color_rgb_list.append(color);
   }
 }
 
