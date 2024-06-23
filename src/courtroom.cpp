@@ -4202,7 +4202,7 @@ void Courtroom::start_chat_ticking()
 
   last_misc = current_misc;
   current_misc = ao_app->get_chat(m_chatmessage[CHAR_NAME]);
-  if ((last_misc != current_misc || char_color_rgb_list.size() < max_colors) && Options::getInstance().customChatboxEnabled())
+  if (last_misc != current_misc || char_color_rgb_list.size() < max_colors)
   {
     gen_char_rgb_list(current_misc);
   }
@@ -4272,21 +4272,10 @@ void Courtroom::chat_tick()
     ui_vp_chat_arrow->setTransformationMode(ao_app->get_misc_scaling(f_custom_theme));
     ui_vp_chat_arrow->loadAndPlayAnimation("chat_arrow", f_custom_theme); // Chat stopped being processed, indicate that.
     QString f_message_filtered = filter_ic_text(f_message, true, -1, m_chatmessage[TEXT_COLOR].toInt());
-    if (Options::getInstance().customChatboxEnabled())
-    { // chatbox colors
-      for (int c = 0; c < max_colors; ++c)
-      {
-        additive_previous = additive_previous.replace("$c" + QString::number(c), char_color_rgb_list.at(c).name(QColor::HexRgb));
-        f_message_filtered = f_message_filtered.replace("$c" + QString::number(c), char_color_rgb_list.at(c).name(QColor::HexRgb));
-      }
-    }
-    else
-    { // default colors
-      for (int c = 0; c < max_colors; ++c)
-      {
-        additive_previous = additive_previous.replace("$c" + QString::number(c), default_color_rgb_list.at(c).name(QColor::HexRgb));
-        f_message_filtered = f_message_filtered.replace("$c" + QString::number(c), default_color_rgb_list.at(c).name(QColor::HexRgb));
-      }
+    for (int c = 0; c < max_colors; ++c)
+    {
+      additive_previous = additive_previous.replace("$c" + QString::number(c), char_color_rgb_list.at(c).name(QColor::HexRgb));
+      f_message_filtered = f_message_filtered.replace("$c" + QString::number(c), char_color_rgb_list.at(c).name(QColor::HexRgb));
     }
     additive_previous = additive_previous + f_message_filtered;
     real_tick_pos = ui_vp_message->toPlainText().size();
@@ -4451,21 +4440,10 @@ void Courtroom::chat_tick()
   {
     // Do the colors, gradual showing, etc. in here
     QString f_message_filtered = filter_ic_text(f_message, true, tick_pos, m_chatmessage[TEXT_COLOR].toInt());
-    if (Options::getInstance().customChatboxEnabled())
-    { // use chatbox colors
-      for (int c = 0; c < max_colors; ++c)
-      {
-        additive_previous = additive_previous.replace("$c" + QString::number(c), char_color_rgb_list.at(c).name(QColor::HexRgb));
-        f_message_filtered = f_message_filtered.replace("$c" + QString::number(c), char_color_rgb_list.at(c).name(QColor::HexRgb));
-      }
-    }
-    else
-    { // just use default colors
-      for (int c = 0; c < max_colors; ++c)
-      {
-        additive_previous = additive_previous.replace("$c" + QString::number(c), default_color_rgb_list.at(c).name(QColor::HexRgb));
-        f_message_filtered = f_message_filtered.replace("$c" + QString::number(c), default_color_rgb_list.at(c).name(QColor::HexRgb));
-      }
+    for (int c = 0; c < max_colors; ++c)
+    {
+      additive_previous = additive_previous.replace("$c" + QString::number(c), char_color_rgb_list.at(c).name(QColor::HexRgb));
+      f_message_filtered = f_message_filtered.replace("$c" + QString::number(c), char_color_rgb_list.at(c).name(QColor::HexRgb));
     }
     ui_vp_message->setHtml(additive_previous + f_message_filtered);
 
@@ -6230,21 +6208,16 @@ void Courtroom::set_text_color_dropdown()
 
   // Update markdown colors. TODO: make a loading function that only loads the
   // config file once instead of several times
-  QString misc_to_check = ""; // default
-  if (Options::getInstance().customChatboxEnabled())
-  {
-    misc_to_check = ao_app->get_chat(current_char); // chatbox specific
-  }
   for (int c = 0; c < max_colors; ++c)
   {
-    QColor color = ao_app->get_chat_color("c" + QString::number(c), misc_to_check);
+    QColor color = ao_app->get_chat_color("c" + QString::number(c), ao_app->get_chat(current_char));
     color_rgb_list.append(color);
-    color_markdown_start_list.append(ao_app->get_chat_markup("c" + QString::number(c) + "_start", misc_to_check));
-    color_markdown_end_list.append(ao_app->get_chat_markup("c" + QString::number(c) + "_end", misc_to_check));
-    color_markdown_remove_list.append(ao_app->get_chat_markup("c" + QString::number(c) + "_remove", misc_to_check) == "1");
-    color_markdown_talking_list.append(ao_app->get_chat_markup("c" + QString::number(c) + "_talking", misc_to_check) != "0");
+    color_markdown_start_list.append(ao_app->get_chat_markup("c" + QString::number(c) + "_start", ao_app->get_chat(current_char)));
+    color_markdown_end_list.append(ao_app->get_chat_markup("c" + QString::number(c) + "_end", ao_app->get_chat(current_char)));
+    color_markdown_remove_list.append(ao_app->get_chat_markup("c" + QString::number(c) + "_remove", ao_app->get_chat(current_char)) == "1");
+    color_markdown_talking_list.append(ao_app->get_chat_markup("c" + QString::number(c) + "_talking", ao_app->get_chat(current_char)) != "0");
 
-    QString color_name = ao_app->get_chat_markup("c" + QString::number(c) + "_name", misc_to_check);
+    QString color_name = ao_app->get_chat_markup("c" + QString::number(c) + "_name", ao_app->get_chat(current_char));
     if (color_name.isEmpty()) // Not defined
     {
       if (c > 0)
@@ -6428,10 +6401,7 @@ void Courtroom::on_reload_theme_clicked()
   set_widgets();
   update_character(m_cid, ui_iniswap_dropdown->itemText(ui_iniswap_dropdown->currentIndex()));
   enter_courtroom();
-  if (Options::getInstance().customChatboxEnabled())
-  {
-    gen_char_rgb_list(ao_app->get_chat(current_char));
-  }
+  gen_char_rgb_list(ao_app->get_chat(current_char));
 
   // to update status on the background
   set_background(current_background, true);
