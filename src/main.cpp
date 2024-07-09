@@ -8,8 +8,8 @@
 
 #include <QDebug>
 #include <QDirIterator>
+#include <QImageReader>
 #include <QLibraryInfo>
-#include <QPluginLoader>
 #include <QResource>
 #include <QTranslator>
 
@@ -28,7 +28,6 @@ int main(int argc, char *argv[])
   }
 #endif
 
-  AOApplication::addLibraryPath(AOApplication::applicationDirPath() + "/lib");
   QResource::registerResource(main_app.get_asset("themes/" + Options::getInstance().theme() + ".rcc"));
 
   QFont main_font = main_app.font();
@@ -46,16 +45,18 @@ int main(int argc, char *argv[])
     fontDatabase.addApplicationFont(it.next());
   }
 
-  QPluginLoader apngPlugin("qapng");
-  if (!apngPlugin.load())
+  QStringList expected_formats{"webp", "apng", "gif"};
+  for (const QByteArray &i_format : QImageReader::supportedImageFormats())
   {
-    qCritical() << "QApng plugin could not be loaded";
+    if (expected_formats.contains(i_format, Qt::CaseInsensitive))
+    {
+      expected_formats.removeAll(i_format.toLower());
+    }
   }
 
-  QPluginLoader webpPlugin("qwebp");
-  if (!webpPlugin.load())
+  if (!expected_formats.isEmpty())
   {
-    qCritical() << "QWebp plugin could not be loaded";
+    call_error("Missing image formats: <b>" + expected_formats.join(", ") + "</b>.<br /><br /> Please make sure you have installed the application properly.");
   }
 
   QString p_language = Options::getInstance().language();
