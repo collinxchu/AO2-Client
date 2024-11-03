@@ -14,10 +14,10 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 option(AO_BUILD_TESTS "Build test programs" ON)
 option(AO_ENABLE_DISCORD_RPC "Enable Discord Rich Presence" ON)
 
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Gui Network Widgets Concurrent WebSockets UiTools)
+find_package(QT NAMES Qt6)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Network Widgets Concurrent WebSockets UiTools)
 
-add_executable(Attorney_Online
+qt_add_executable(Attorney_Online
   src/aoapplication.cpp
   src/aoapplication.h
   src/aoblipplayer.cpp
@@ -98,7 +98,10 @@ add_executable(Attorney_Online
   src/widgets/server_editor_dialog.cpp
   src/widgets/server_editor_dialog.h
   data.qrc
+  src/widgets/playerlistwidget.h src/widgets/playerlistwidget.cpp
+  src/widgets/moderator_dialog.h src/widgets/moderator_dialog.cpp
   src/screenslidetimer.h src/screenslidetimer.cpp
+  src/moderation_functions.h src/moderation_functions.cpp
   src/network/serverinfo.h src/network/serverinfo.cpp
 )
 

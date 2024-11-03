@@ -62,8 +62,7 @@ private:
   QCheckBox *ui_discord_cb;
   QLabel *ui_language_label;
   QComboBox *ui_language_combobox;
-  QLabel *ui_scaling_label;
-  QComboBox *ui_scaling_combobox;
+  QComboBox *ui_resize_combobox;
   QCheckBox *ui_shake_cb;
   QCheckBox *ui_effects_cb;
   QCheckBox *ui_framenetwork_cb;
@@ -76,6 +75,8 @@ private:
   QCheckBox *ui_continuous_cb;
   QCheckBox *ui_category_stop_cb;
   QCheckBox *ui_sfx_on_idle_cb;
+  QCheckBox *ui_restoreposition_cb;
+  QLineEdit *ui_playerlist_format_edit;
 
   // The callwords tab
   QPlainTextEdit *ui_callwords_textbox;

@@ -2,9 +2,8 @@
 #include "aoapplication.h"
 
 #include "courtroom.h"
-#include "datatypes.h"
+#include "file_functions.h"
 #include "lobby.h"
-#include "networkmanager.h"
 
 #include <QDebug>
 #include <QDirIterator>
@@ -29,24 +28,30 @@ int main(int argc, char *argv[])
 #endif
 
   AOApplication main_app;
-  app.setApplicationVersion(AOApplication::get_version_string());
-  app.setApplicationDisplayName(QObject::tr("Attorney Online %1").arg(app.applicationVersion()));
+  QApplication::setApplicationVersion(AOApplication::get_version_string());
+  QApplication::setApplicationDisplayName(QObject::tr("Attorney Online %1").arg(QApplication::applicationVersion()));
 
   QResource::registerResource(main_app.get_asset("themes/" + Options::getInstance().theme() + ".rcc"));
 
-  QFont main_font = app.font();
+  QFont main_font = QApplication::font();
   main_app.default_font = main_font;
 
   QFont new_font = main_font;
   int new_font_size = main_app.default_font.pointSize() * Options::getInstance().themeScalingFactor();
   new_font.setPointSize(new_font_size);
-  app.setFont(new_font);
+  QApplication::setFont(new_font);
 
-  QFontDatabase fontDatabase;
-  QDirIterator it(get_base_path() + "fonts", QDirIterator::Subdirectories);
-  while (it.hasNext())
+  QStringList font_paths;
+  font_paths.append(get_base_path());
+  font_paths.append(Options::getInstance().mountPaths());
+
+  for (const QString &path : font_paths)
   {
-    fontDatabase.addApplicationFont(it.next());
+    QDirIterator it(path + "fonts", QDirIterator::Subdirectories);
+    while (it.hasNext())
+    {
+      QFontDatabase::addApplicationFont(it.next());
+    }
   }
 
   QStringList expected_formats{"webp", "apng", "gif"};
@@ -70,18 +75,30 @@ int main(int argc, char *argv[])
   }
 
   QTranslator qtTranslator;
-  qtTranslator.load("qt_" + p_language, QLibraryInfo::location(QLibraryInfo::TranslationsPath));
-  app.installTranslator(&qtTranslator);
+  if (!qtTranslator.load("qt_" + p_language, QLibraryInfo::path(QLibraryInfo::TranslationsPath)))
+  {
+    qDebug() << "Failed to load translation qt_" + p_language;
+  }
+  else
+  {
+    QApplication::installTranslator(&qtTranslator);
+  }
 
   QTranslator appTranslator;
-  qDebug() << ":/data/translations/ao_" + p_language;
-  appTranslator.load("ao_" + p_language, ":/data/translations/");
-  app.installTranslator(&appTranslator);
+  if (!appTranslator.load("ao_" + p_language, ":/data/translations/"))
+  {
+    qDebug() << "Failed to load translation ao_" + p_language;
+  }
+  else
+  {
+    QApplication::installTranslator(&appTranslator);
+    qDebug() << ":/data/translations/ao_" + p_language;
+  }
 
   main_app.construct_lobby();
   main_app.net_manager->get_server_list();
   main_app.net_manager->send_heartbeat();
   main_app.w_lobby->show();
 
-  return app.exec();
+  return QApplication::exec();
 }
