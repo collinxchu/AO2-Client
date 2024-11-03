@@ -8,15 +8,18 @@
 #include "widgets/server_editor_dialog.h"
 
 #include <QImageReader>
+#include <QMessageBox>
 #include <QUiLoader>
+#include <QVersionNumber>
+#include <qnamespace.h>
 
 Lobby::Lobby(AOApplication *p_ao_app, NetworkManager *p_net_manager)
-    : QMainWindow()
+    : QMainWindow{}
+    , ao_app{p_ao_app}
+    , net_manager{p_net_manager}
 {
-  ao_app = p_ao_app;
-  net_manager = p_net_manager;
-
   reloadUi();
+  setObjectName("lobby");
 }
 
 void Lobby::on_tab_changed(int index)
@@ -82,6 +85,12 @@ int Lobby::pageSelected()
   return current_page;
 }
 
+void Lobby::closeEvent(QCloseEvent *event)
+{
+  Options::getInstance().setWindowPosition(objectName(), pos());
+  QMainWindow::closeEvent(event);
+}
+
 void Lobby::reset_selection()
 {
   last_index = -1;
@@ -95,9 +104,8 @@ void Lobby::reset_selection()
 
 void Lobby::loadUI()
 {
-  this->setWindowTitle(tr("Attorney Online %1").arg(QApplication::applicationVersion()));
-  this->setWindowIcon(QIcon(":/logo.png"));
-  this->setWindowFlags((this->windowFlags() | Qt::CustomizeWindowHint));
+  setWindowIcon(QIcon(":/logo.png"));
+  setWindowFlags((windowFlags() | Qt::CustomizeWindowHint));
 
   QUiLoader l_loader(this);
   QFile l_uiFile(Options::getInstance().getUIAsset(DEFAULT_UI));
@@ -162,7 +170,7 @@ void Lobby::loadUI()
   FROM_UI(QTextBrowser, server_description_text);
   FROM_UI(QPushButton, connect_button);
   connect(ui_connect_button, &QPushButton::released, net_manager, &NetworkManager::join_to_server);
-  connect(ui_connect_button, &QPushButton::released, this, [=] { ui_server_player_count_lbl->setText(tr("Joining Server...")); });
+  connect(ui_connect_button, &QPushButton::released, this, [=, this] { ui_server_player_count_lbl->setText(tr("Joining Server...")); });
   connect(net_manager, &NetworkManager::server_connected, ui_connect_button, &QPushButton::setEnabled);
 
   FROM_UI(QTextBrowser, motd_text);
@@ -266,7 +274,7 @@ void Lobby::on_about_clicked()
                    "<a href='https://github.com/AttorneyOnline/AO2-Client'>"
                    "https://github.com/AttorneyOnline/AO2-Client</a>"
                    "<p><b>Major development:</b><br>"
-                   "OmniTroid, stonedDiscord, longbyte1, gameboyprinter, Cerapter, "
+                   "OmniTroid, stonedDiscord, longbyte1, scatterflower, Cerapter, "
                    "Crystalwarrior, Iamgoofball, in1tiate"
                    "<p><b>Client development:</b><br>"
                    "Cents02, windrammer, skyedeving, TrickyLeifa, Salanto, lambdcalculus"
@@ -285,6 +293,7 @@ void Lobby::on_about_clicked()
                    "promotion); "
                    "Remy, Hibiki, court-records.net (sprites); Qubrick (webAO); "
                    "Rue (website); Draxirch (UI design); "
+                   "scatterflower and Salanto (akashi); "
                    "Lewdton and Argoneus (tsuserver); "
                    "Fiercy, Noevain, Cronnicossy, and FanatSors (AO1); "
                    "server hosts, game masters, case makers, content creators, "
@@ -551,11 +560,16 @@ void Lobby::get_motd()
 void Lobby::check_for_updates()
 {
   net_manager->request_document(MSDocumentType::ClientVersion, [this](QString version) {
-    const QString current_version = ao_app->get_version_string();
-    if (!version.isEmpty() && version != current_version)
+    QVersionNumber current_version = QVersionNumber::fromString(ao_app->get_version_string());
+    QVersionNumber master_version = QVersionNumber::fromString(version);
+
+    if (current_version < master_version)
     {
-      ui_game_version_lbl->setText(tr("Version: %1 (!)").arg(current_version));
-      ui_game_version_lbl->setToolTip(tr("New version available: %1").arg(version));
+      ui_game_version_lbl->setText(tr("Version: %1 [OUTDATED]").arg(current_version.toString()));
+      setWindowTitle(tr("[Your client is outdated]"));
+      const QString download_url = QString("https://github.com/AttorneyOnline/AO2-Client/releases/latest").replace(QRegularExpression("\\b(https?://\\S+\\.\\S+)\\b"), "<a href='\\1'>\\1</a>");
+      const QString message = QString("Your client is outdated!<br>Your Version: %1<br>Current Version: %2<br>Download the latest version at<br>%3").arg(current_version.toString(), master_version.toString(), download_url);
+      QMessageBox::warning(this, "Your client is outdated!", message);
     }
   });
 }

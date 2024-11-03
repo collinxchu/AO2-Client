@@ -90,6 +90,7 @@ void AOApplication::server_packet_received(AOPacket packet)
   else if (header == "FL")
   {
     m_serverdata.set_features(content);
+    w_courtroom->set_widgets();
     log_to_demo = false;
   }
   else if (header == "PN")
@@ -116,11 +117,6 @@ void AOApplication::server_packet_received(AOPacket packet)
     }
 
     generated_chars = 0;
-
-    destruct_courtroom();
-    construct_courtroom();
-
-    courtroom_loaded = false;
 
     int selected_server = w_lobby->get_selected_server();
     QString server_address;
@@ -280,6 +276,9 @@ void AOApplication::server_packet_received(AOPacket packet)
     }
 
     send_server_packet(AOPacket("RD"));
+
+    // TODO : Implement username messaging and requirement server-side properly.
+    send_server_packet(AOPacket("CT", {Options::getInstance().username(), ""}));
     log_to_demo = false;
   }
   else if (header == "FM") // Fetch music ONLY
@@ -529,6 +528,11 @@ void AOApplication::server_packet_received(AOPacket packet)
   }
   else if (header == "ZZ")
   {
+    if (content.size() < 1)
+    {
+      return;
+    }
+
     if (is_courtroom_constructed() && !content.isEmpty())
     {
       w_courtroom->mod_called(content.at(0));
@@ -675,6 +679,31 @@ void AOApplication::server_packet_received(AOPacket packet)
     }
 
     m_serverdata.set_asset_url(content.at(0));
+  }
+  else if (header == "PR")
+  {
+    if (content.size() < 2 || !is_courtroom_constructed())
+    {
+      return;
+    }
+
+    PlayerRegister update{content.at(0).toInt(), PlayerRegister::REGISTER_TYPE(content.at(1).toInt())};
+    w_courtroom->playerList()->registerPlayer(update);
+
+    if (log_to_demo)
+    {
+      append_to_demofile(packet.toString(true));
+    }
+  }
+  else if (header == "PU")
+  {
+    if (content.size() < 3 || !is_courtroom_constructed())
+    {
+      return;
+    }
+
+    PlayerUpdate update{content.at(0).toInt(), PlayerUpdate::DATA_TYPE(content.at(1).toInt()), content.at(2)};
+    w_courtroom->playerList()->updatePlayer(update);
   }
 
   if (log_to_demo)

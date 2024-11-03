@@ -43,7 +43,7 @@ public:
   inline VPath operator+(const VPath &str) const { return VPath(this->toQString() + str.toQString()); }
 };
 
-inline uint qHash(const VPath &key, uint seed = qGlobalQHashSeed())
+inline size_t qHash(const VPath &key, uint seed = qGlobalQHashSeed())
 {
   return qHash(key.toQString(), seed);
 }
@@ -103,8 +103,8 @@ public:
   static QString get_version_string();
 
   static const int RELEASE = 2;
-  static const int MAJOR_VERSION = 10;
-  static const int MINOR_VERSION = 1;
+  static const int MAJOR_VERSION = 11;
+  static const int MINOR_VERSION = 0;
 
   void set_server_list(QVector<ServerInfo> &servers) { server_list = servers; }
   QVector<ServerInfo> &get_server_list() { return server_list; }
@@ -307,10 +307,10 @@ public:
   QString get_emote_property(QString p_char, QString p_emote, QString p_property);
 
   // Return a transformation mode from a string ("smooth" for smooth, anything else for fast)
-  Qt::TransformationMode get_scaling(QString p_scaling);
+  RESIZE_MODE get_scaling(QString p_scaling);
 
   // Returns the scaling type for p_miscname
-  Qt::TransformationMode get_misc_scaling(QString p_miscname);
+  RESIZE_MODE get_misc_scaling(QString p_miscname);
 
   // ======
   // These are all casing-related settings.
@@ -319,11 +319,13 @@ public:
   // Currently defined subtheme
   QString subtheme;
 
-  // Default is always default.
-  const QString default_theme = "default";
+  const QString default_theme = "default"; // don't change this!!! don't do it!!!
 
   // The file name of the log file in base/logs.
   QString log_filename;
+
+  bool pointExistsOnScreen(QPoint point);
+  void centerOrMoveWidgetOnPrimaryScreen(QWidget *widget);
 
   void initBASS();
   static void load_bass_plugins();
@@ -335,11 +337,12 @@ public:
 
 private:
   QVector<ServerInfo> server_list;
-  QHash<uint, QString> asset_lookup_cache;
-  QHash<uint, QString> dir_listing_cache;
-  QSet<uint> dir_listing_exist_cache;
+  QHash<size_t, QString> asset_lookup_cache;
+  QHash<size_t, QString> dir_listing_cache;
+  QSet<size_t> dir_listing_exist_cache;
 
 public Q_SLOTS:
+  void server_connected();
   void server_disconnected();
   void loading_cancelled();
 
